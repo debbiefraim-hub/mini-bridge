@@ -6,6 +6,41 @@ const {Server}=require('socket.io');
 const app=express(),server=http.createServer(app),io=new Server(server);
 app.use(express.static(path.join(__dirname,'public')));
 const rooms=new Map();
+// Administrator dashboard: never expose this data without the server-side password.
+function requireAdmin(req,res,next){
+ res.set('Cache-Control','no-store');
+ const configured=process.env.ADMIN_PASSWORD;
+ if(!configured || configured.length<12)return res.status(503).type('text/plain').send('Admin dashboard is not configured. Set ADMIN_PASSWORD (12+ characters) in Render.');
+ const header=req.get('authorization')||'';
+ let credentials='';
+ if(header.startsWith('Basic ')){
+  try{credentials=Buffer.from(header.slice(6),'base64').toString('utf8');}catch(e){}
+ }
+ const expected='admin:'+configured;
+ const a=Buffer.from(credentials),b=Buffer.from(expected);
+ if(a.length!==b.length||!crypto.timingSafeEqual(a,b)){
+  res.set('WWW-Authenticate','Basic realm="Mini Bridge Admin", charset="UTF-8"');
+  return res.status(401).send('Authentication required');
+ }
+ next();
+}
+function adminSnapshot(){
+ const list=Array.from(rooms.values()).map(g=>({
+  code:g.code,round:g.round,phase:g.phase,paused:!!g.paused,
+  connected:g.players.filter(p=>!!p.socket).length,
+  players:g.players.length
+ }));
+ const live=list.filter(g=>g.phase!=='finished');
+ return {time:new Date().toISOString(),rooms:live.length,
+  waiting:live.filter(g=>g.phase==='lobby').length,
+  playing:live.filter(g=>g.phase!=='lobby'&&!g.paused).length,
+  paused:live.filter(g=>g.paused).length,
+  connected:live.reduce((n,g)=>n+g.connected,0),
+  finished:list.length-live.length,
+  list};
+}
+app.get('/admin',requireAdmin,(req,res)=>res.sendFile(path.join(__dirname,'admin.html')));
+app.get('/admin/api/status',requireAdmin,(req,res)=>res.json(adminSnapshot()));
 const suits=['♠','♥','♦','♣'];
 function deck(){return suits.flatMap(s=>Array.from({length:13},(_,i)=>({s,r:i+2})));}
 function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
