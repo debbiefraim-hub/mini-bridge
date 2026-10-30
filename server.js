@@ -28,7 +28,8 @@ function adminSnapshot(){
  const list=Array.from(rooms.values()).map(g=>({
   code:g.code,hostName:g.hostName||g.players.find(p=>p.token===g.hostId)?.name||'',round:g.round,phase:g.phase,paused:!!g.paused,
   connected:g.players.filter(p=>!!p.socket).length,
-  players:g.players.length
+  players:g.players.length,
+   participantNames:g.players.filter(p=>p.token!==g.hostId).map(p=>p.name)
  }));
  const live=list.filter(g=>g.phase!=='finished');
  return {time:new Date().toISOString(),rooms:live.length,
