@@ -4,6 +4,16 @@ const crypto=require('crypto');
 const http=require('http');
 const {Server}=require('socket.io');
 const app=express(),server=http.createServer(app),io=new Server(server);
+// Always revalidate the game page with the server. Keep other static assets unchanged.
+app.use((req,res,next)=>{
+ const pathname=req.path;
+ if(req.method==='GET' && (pathname==='/' || pathname==='/index.html' || pathname.endsWith('.html'))){
+  res.set('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma','no-cache');
+  res.set('Expires','0');
+ }
+ next();
+});
 app.use(express.static(path.join(__dirname,'public')));
 const rooms=new Map();
 // Administrator dashboard: never expose this data without the server-side password.
