@@ -1,6 +1,6 @@
 {
-  "name": "מיני ברידג׳ – דבי בדיקות",
-  "short_name": "מיני ברידג׳ TEST",
+  "name": "מיני ברידג׳ – דבי אופקים",
+  "short_name": "מיני ברידג׳ אופקים",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
