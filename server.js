@@ -39,7 +39,9 @@ function adminSnapshot(){
   code:g.code,hostName:g.hostName||g.players.find(p=>p.token===g.hostId)?.name||'',round:g.round,phase:g.phase,paused:!!g.paused,
   connected:g.players.filter(p=>!!p.socket).length,
   players:g.players.length,
-   participantNames:g.players.filter(p=>p.token!==g.hostId).map(p=>p.name)
+   participantNames:g.players.filter(p=>p.token!==g.hostId).map(p=>p.name),
+   scorePlayers:g.players.map(p=>({name:p.name,score:p.score})),
+   scoreRounds:(g.roundRecords||[]).map(r=>({round:r.round,points:r.players.map(p=>p.bid===p.tricks?10+p.bid*p.bid:p.tricks)}))
  }));
  const live=list.filter(g=>g.phase!=='finished');
  return {time:new Date().toISOString(),rooms:live.length,
