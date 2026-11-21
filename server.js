@@ -57,6 +57,7 @@ function adminSnapshot(){
   paused:live.filter(g=>g.paused).length,
   connected:live.reduce((n,g)=>n+g.connected,0),
   finished:list.length-live.length,
+  lastFinishedGame,
   list};
 }
 app.get('/admin',requireAdmin,(req,res)=>res.sendFile(path.join(__dirname,'admin.html')));
